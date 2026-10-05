@@ -1,0 +1,13 @@
+{
+    "name": "exclusive-cars/seo-bridge",
+    "description": "Controlled REST bridge between WordPress and the Exclusive Cars SEO service",
+    "type": "wordpress-plugin",
+    "autoload": {
+        "psr-4": {
+            "ExclusiveCars\\SeoBridge\\": "src/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    }
+}
