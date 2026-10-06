@@ -6,6 +6,7 @@ final class InventoryCollector {
     public function __construct(
         private PostTypeCollector $postTypes,
         private TaxonomyCollector $taxonomies,
+        private CoreFieldCollector $coreFields,
         private AcfFieldCollector $acfFields,
         private YoastFieldCollector $yoastFields
     ) {}
@@ -15,6 +16,7 @@ final class InventoryCollector {
         return [
             'post_types' => $this->postTypes->collect(),
             'taxonomies' => $this->taxonomies->collect(),
+            'core_fields' => $this->coreFields->collect(),
             'acf_fields' => $this->acfFields->collect(),
             'yoast_fields' => $this->yoastFields->collect(),
         ];

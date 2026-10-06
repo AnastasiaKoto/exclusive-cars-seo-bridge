@@ -3,9 +3,15 @@
 declare(strict_types=1);
 
 namespace ExclusiveCars\SeoBridge\Inventory;
-
+use ExclusiveCars\SeoBridge\Security\FieldPolicy;
 final class AcfFieldCollector
 {
+    public function __construct(
+        private FieldPolicy $fieldPolicy
+    )
+    {
+    }
+
     public function collect(): array
     {
         if (
@@ -40,12 +46,14 @@ final class AcfFieldCollector
         $result = [];
 
         foreach ($fields as $field) {
+            $access = $this->fieldPolicy->acf($field['key'] ?? '');
             $result[] = [
                 'key' => $field['key'] ?? null,
                 'name' => $field['name'] ?? null,
                 'label' => $field['label'] ?? null,
                 'type' => $field['type'] ?? null,
                 'required' => (bool) ($field['required'] ?? false),
+                'access' => $access,
             ];
         }
 

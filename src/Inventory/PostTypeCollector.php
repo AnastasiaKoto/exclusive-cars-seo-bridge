@@ -9,16 +9,11 @@ final class PostTypeCollector
 {
     public function collect(): array
     {
-        $postTypes = get_post_types(
-            [
-                'public' => true
-            ],
-            'objects'
-        );
-
         $result = [];
 
-        foreach($postTypes as $postType) {
+        foreach($this->names() as $postTypeName) {
+            $postType = get_post_type_object($postTypeName);
+            
             if (!$postType instanceof WP_Post_Type) {
                 continue;
             }
@@ -46,5 +41,19 @@ final class PostTypeCollector
         );
 
         return $result;
+    }
+
+    public function names(): array
+    {
+        $names = get_post_types(
+            ['public' => true],
+            'names'
+        );
+
+        unset($names['attachment']);
+
+        sort($names);
+
+        return array_values($names);
     }
 }
