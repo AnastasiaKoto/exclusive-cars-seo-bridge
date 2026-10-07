@@ -12,7 +12,8 @@ final class Routes
     public function __construct(
         private InventoryController $inventoryController,
         private CapabilitiesController $capabilitiesController,
-        private PostsController $postsController
+        private PostsController $postsController,
+        private PostUpdateController $postUpdateController
     ) {}
 
     public function register(): void
@@ -78,6 +79,38 @@ final class Routes
                         'type' => 'integer',
                         'minimum' => 1,
                         'maximum' => 100,
+                    ],
+                ],
+            ]
+        );
+        register_rest_route(
+            Api::NAMESPACE,
+            '/posts/(?P<post_id>\d+)',
+            [
+                'methods' => WP_REST_Server::EDITABLE,
+
+                'callback' => [
+                    $this->postUpdateController,
+                    'update',
+                ],
+
+                'permission_callback' => static function (): bool {
+                    return current_user_can(Capabilities::WRITE);
+                },
+
+                'args' => [
+                    'post_id' => [
+                        'required' => true,
+                        'type' => 'integer',
+                        'minimum' => 1,
+                    ],
+                    'expected_version' => [
+                        'required' => true,
+                        'type' => 'string',
+                    ],
+                    'fields' => [
+                        'required' => true,
+                        'type' => 'object',
                     ],
                 ],
             ]

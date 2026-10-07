@@ -3,15 +3,9 @@
 declare(strict_types=1);
 
 namespace ExclusiveCars\SeoBridge\Content;
-
+use ExclusiveCars\SeoBridge\Contract\YoastFields;
 final class YoastValueCollector
 {
-    private const TITLE_META_KEY =
-        '_yoast_wpseo_title';
-
-    private const DESCRIPTION_META_KEY =
-        '_yoast_wpseo_metadesc';
-
     public function collect(int $post_id): array
     {
         if (! defined('WPSEO_VERSION')) {
@@ -20,11 +14,11 @@ final class YoastValueCollector
         $renderedValues = $this->getRenderedValues($post_id);
         return [
             'title' => [
-                'raw' => $this->getValue($post_id, self::TITLE_META_KEY),
+                'raw' => $this->getValue($post_id, YoastFields::META_KEYS[YoastFields::TITLE]),
                 'rendered' => $renderedValues['title']
             ],
             'description' => [
-                'raw' => $this->getValue($post_id, self::DESCRIPTION_META_KEY),
+                'raw' => $this->getValue($post_id, YoastFields::META_KEYS[YoastFields::DESCRIPTION]),
                 'rendered' => $renderedValues['description']
             ]
         ];

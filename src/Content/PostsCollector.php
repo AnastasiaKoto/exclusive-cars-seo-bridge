@@ -7,13 +7,15 @@ use WP_Query;
 use WP_Post;
 use ExclusiveCars\SeoBridge\Inventory\PostTypeCollector;
 use ExclusiveCars\SeoBridge\Contract\PostFields;
+use ExclusiveCars\SeoBridge\Contract\PostStates;
 final class PostsCollector
 {
     public function __construct(
         private PostTypeCollector $postTypes,
         private ACFValueCollector $acfValueCollector,
         private YoastValueCollector $yoastValueCollector,
-        private PostVersionCalculator $postVersionCalculator
+        private PostVersionCalculator $postVersionCalculator,
+        private PostStatesCollector $postStatesCollector
     )
     {}
 
@@ -22,7 +24,7 @@ final class PostsCollector
         $items = [];
         $query = new WP_Query([
             'post_type' => $this->postTypes->names(),
-            'post_status' => ['publish', 'draft'],
+            'post_status' => PostStates::ALLOWED,
             'posts_per_page' => $per_page,
             'paged' => $page,
             'orderby' => 'ID',
@@ -30,7 +32,7 @@ final class PostsCollector
         ]);
 
         foreach($query->posts as $post) {
-            $items[] = $this->normilize($post);
+            $items[] = $this->postStatesCollector->collect($post);
         }
 
         return [
@@ -42,34 +44,5 @@ final class PostsCollector
                 'total_items' => (int) $query->found_posts
             ]
         ];
-    }
-
-    private function normilize(WP_Post $post): array
-    {
-        $permalink = get_permalink($post);
-        $acf = $this->acfValueCollector->collect($post->ID);
-        $seo = $this->yoastValueCollector->collect($post->ID);
-        $postData = [
-            PostFields::ID => (int) $post->ID,
-            PostFields::POST_TYPE => (string) $post->post_type,
-            PostFields::STATUS => (string) $post->post_status,
-            PostFields::SLUG => (string) $post->post_name,
-            PostFields::TITLE => (string) $post->post_title,
-            PostFields::CONTENT => (string) $post->post_content,
-            PostFields::EXCERPT => (string) $post->post_excerpt,
-            PostFields::PARENT_ID => (int) $post->post_parent,
-            'acf' => $acf,
-            'seo' => $seo,
-        ];
-        $postData[PostFields::VERSION] =
-            $this->postVersionCalculator->calculate($postData);
-
-        $postData[PostFields::MODIFIED_AT] =
-            get_post_modified_time(DATE_ATOM, false, $post);
-
-        $postData[PostFields::URL] =
-            $permalink !== false ? $permalink : null;
-
-        return $postData;
     }
 }

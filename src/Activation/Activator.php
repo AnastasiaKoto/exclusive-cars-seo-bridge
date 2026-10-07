@@ -31,5 +31,7 @@ final class Activator
 
         $role->add_cap('read');
         $role->add_cap(Capabilities::READ);
+        $role->add_cap('white');
+        $role->add_cap(Capabilities::WRITE);
     }
 }
