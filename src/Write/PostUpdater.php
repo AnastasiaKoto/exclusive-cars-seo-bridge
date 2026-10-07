@@ -10,6 +10,7 @@ use WP_Post;
 use RuntimeException;
 use DomainException;
 use InvalidArgumentException;
+use ExclusiveCars\SeoBridge\Exception\VersionMismatchException;
 use ExclusiveCars\SeoBridge\Inventory\PostTypeCollector;
 
 final class PostUpdater
@@ -34,7 +35,7 @@ final class PostUpdater
         $before = $this->getPostState($postId);
 
         if (!hash_equals($before[PostFields::VERSION], $expectedVersion)) {
-            throw new RuntimeException('Post version mismatch.');
+            throw new VersionMismatchException('Post version mismatch.');
         }
         if(empty($fields)) {
             throw new RuntimeException('Fields must be a non-empty array.');
