@@ -38,10 +38,10 @@ final class PostUpdater
             throw new VersionMismatchException('Post version mismatch.');
         }
         if(empty($fields)) {
-            throw new RuntimeException('Fields must be a non-empty array.');
+            throw new InvalidArgumentException('Fields must be a non-empty array.');
         }
         if(array_diff(array_keys($fields), self::FIELD_GROUPS)) {
-            throw new RuntimeException('Invalid field group(s) provided.');
+            throw new InvalidArgumentException('Invalid field group(s) provided.');
         }
 
         $coreFields = $this->checkCoreFields($fields);
@@ -99,7 +99,7 @@ final class PostUpdater
         $coreFields = $fields['core'] ?? [];
         
         if (!is_array($coreFields)) {
-            throw new RuntimeException('Core fields must be an array.');
+            throw new InvalidArgumentException('Core fields must be an array.');
         }
 
         $this->coreFieldWriter->validate($coreFields);
@@ -112,7 +112,7 @@ final class PostUpdater
         $acfFields = $fields['acf'] ?? [];
 
         if (!is_array($acfFields)) {
-            throw new RuntimeException('ACF fields must be an array.');
+            throw new InvalidArgumentException('ACF fields must be an array.');
         }
 
         $this->acfFieldWriter->validate($acfFields);
@@ -125,7 +125,7 @@ final class PostUpdater
         $yoastFields = $fields['yoast'] ?? [];
 
         if (!is_array($yoastFields)) {
-            throw new RuntimeException('Yoast fields must be an array.');
+            throw new InvalidArgumentException('Yoast fields must be an array.');
         }
 
         $this->yoastFieldWriter->validate($yoastFields);

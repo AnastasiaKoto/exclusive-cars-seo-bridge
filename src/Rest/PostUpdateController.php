@@ -19,23 +19,23 @@ final class PostUpdateController {
 
     public function update(WP_REST_Request $request): WP_REST_Response|WP_Error
     {
-        $post_id = (int) $request->get_param('post_id');
-        $fields = $request->get_param('fields');
-        $expectedVersion = $request->get_param('expected_version');
-
-        if (!is_string($expectedVersion) || $expectedVersion === '') {
-            throw new InvalidArgumentException(
-                'Expected version must be a non-empty string.'
-            );
-        }
-
-        if (!is_array($fields)) {
-            throw new InvalidArgumentException(
-                'Fields must be an array.'
-            );
-        }
-
         try {
+            $post_id = (int) $request->get_param('post_id');
+            $fields = $request->get_param('fields');
+            $expectedVersion = $request->get_param('expected_version');
+
+            if (!is_string($expectedVersion)|| !preg_match('/^sha256:[a-f0-9]{64}$/', $expectedVersion)) {
+                throw new InvalidArgumentException(
+                    'Expected version must be a valid SHA-256 version.'
+                );
+            }
+
+            if (!is_array($fields)) {
+                throw new InvalidArgumentException(
+                    'Fields must be an array.'
+                );
+            }
+
             $snapshots = $this->postUpdater->update($post_id, $expectedVersion, $fields);
             return new WP_REST_Response($snapshots, 200);
         } catch(VersionMismatchException $exception) {
