@@ -4,23 +4,32 @@ declare(strict_types=1);
 namespace ExclusiveCars\SeoBridge;
 
 use ExclusiveCars\SeoBridge\Capabilities\CapabilitiesCollector;
+
 use ExclusiveCars\SeoBridge\Content\ACFValueCollector;
 use ExclusiveCars\SeoBridge\Content\PostsCollector;
 use ExclusiveCars\SeoBridge\Content\PostStatesCollector;
 use ExclusiveCars\SeoBridge\Content\PostVersionCalculator;
 use ExclusiveCars\SeoBridge\Content\YoastValueCollector;
+use ExclusiveCars\SeoBridge\Content\TermsCollector;
+use ExclusiveCars\SeoBridge\Content\TermStateCollector;
+use ExclusiveCars\SeoBridge\Content\YoastTermsValueCollector;
+
 use ExclusiveCars\SeoBridge\Inventory\AcfFieldCollector;
 use ExclusiveCars\SeoBridge\Inventory\CoreFieldCollector;
 use ExclusiveCars\SeoBridge\Inventory\InventoryCollector;
 use ExclusiveCars\SeoBridge\Inventory\PostTypeCollector;
 use ExclusiveCars\SeoBridge\Inventory\TaxonomyCollector;
 use ExclusiveCars\SeoBridge\Inventory\YoastFieldCollector;
+
 use ExclusiveCars\SeoBridge\Rest\CapabilitiesController;
 use ExclusiveCars\SeoBridge\Rest\InventoryController;
 use ExclusiveCars\SeoBridge\Rest\PostsController;
 use ExclusiveCars\SeoBridge\Rest\PostUpdateController;
+use ExclusiveCars\SeoBridge\Rest\TermsController;
 use ExclusiveCars\SeoBridge\Rest\Routes;
+
 use ExclusiveCars\SeoBridge\Security\FieldPolicy;
+
 use ExclusiveCars\SeoBridge\Write\AcfFieldWriter;
 use ExclusiveCars\SeoBridge\Write\CoreFieldWriter;
 use ExclusiveCars\SeoBridge\Write\PostStateRestorer;
@@ -35,7 +44,8 @@ final class Plugin
             self::buildInventoryController(),
             new CapabilitiesController(new CapabilitiesCollector()),
             self::buildPostsController(),
-            self::buildPostUpdateController()
+            self::buildPostUpdateController(),
+            self::buildTermsController()
         );
         add_action('rest_api_init', [$routes, 'register']);
     }
@@ -83,5 +93,18 @@ final class Plugin
             $yoast,
             new PostStateRestorer($core, $acf, $yoast)
         ));
+    }
+
+    private static function buildTermsController(): TermsController
+    {
+        $tax_collector = new TaxonomyCollector();
+        $version_calculator = new PostVersionCalculator();
+        $yoast = new YoastTermsValueCollector();
+
+        $state = new TermStateCollector($version_calculator, $yoast);
+        $collector = new TermsCollector($tax_collector, $state);
+        $controller = new TermsController($collector);
+
+        return $controller;
     }
 }

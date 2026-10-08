@@ -26,13 +26,16 @@ final class PostUpdateController
             if (strlen($request->get_body()) > 1048576) {
                 throw new InvalidArgumentException('Request body exceeds 1 MiB.');
             }
+
             $fields = $request->get_param('fields');
             $expectedVersion = $request->get_param('expected_version');
+
             if (!is_string($expectedVersion)
                 || !preg_match('/^sha256:[a-f0-9]{64}$/', $expectedVersion)
                 || !is_array($fields)) {
                 throw new InvalidArgumentException('Invalid write request.');
             }
+            
             return new WP_REST_Response(
                 $this->postUpdater->update($postId, $expectedVersion, $fields),
                 200

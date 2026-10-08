@@ -9,16 +9,13 @@ final class TaxonomyCollector
 {
     public function collect(): array
     {
-        $taxonomies = get_taxonomies(
-            [
-                'public' => true
-            ],
-            'objects'
-        );
+        $taxonomy_names = self::names();
 
         $result = [];
 
-        foreach($taxonomies as $taxonomy) {
+        foreach($taxonomy_names as $name) {
+
+            $taxonomy = get_taxonomy($name);
             
             if(!$taxonomy instanceof WP_Taxonomy) {
                 continue;
@@ -50,5 +47,17 @@ final class TaxonomyCollector
         );
 
         return $result;
+    }
+
+    public function names(): array
+    {
+        $names = get_taxonomies(
+            ['public' => true],
+            'names'
+        );
+
+        sort($names);
+
+        return array_values($names);
     }
 }

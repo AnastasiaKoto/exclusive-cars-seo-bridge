@@ -89,6 +89,7 @@ final class PostUpdater
                 $this->yoastFieldWriter->write($postId, $changed['yoast']);
             }
             $after = $this->getPostState($postId);
+            
             if (!$this->matches($after, $requested)) {
                 throw new RuntimeException('Read-back verification failed.');
             }

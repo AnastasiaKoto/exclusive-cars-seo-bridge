@@ -13,7 +13,8 @@ final class Routes
         private InventoryController $inventoryController,
         private CapabilitiesController $capabilitiesController,
         private PostsController $postsController,
-        private PostUpdateController $postUpdateController
+        private PostUpdateController $postUpdateController,
+        private TermsController $termsController
     ) {}
 
     public function register(): void
@@ -112,6 +113,41 @@ final class Routes
                     'fields' => [
                         'required' => true,
                         'type' => 'object',
+                    ],
+                ],
+            ]
+        );
+        register_rest_route(
+            Api::NAMESPACE,
+            '/terms',
+            [
+                'methods' => WP_REST_Server::READABLE,
+
+                'callback' => [
+                    $this->termsController,
+                    'index',
+                ],
+
+                'permission_callback' => static function (): bool {
+                    return current_user_can(Capabilities::READ);
+                },
+
+                'args' => [
+                    'page' => [
+                        'description' => 'Page number.',
+                        'required' => false,
+                        'default' => 1,
+                        'type' => 'integer',
+                        'minimum' => 1,
+                    ],
+
+                    'per_page' => [
+                        'description' => 'Number of terms per page.',
+                        'required' => false,
+                        'default' => 50,
+                        'type' => 'integer',
+                        'minimum' => 1,
+                        'maximum' => 100,
                     ],
                 ],
             ]
