@@ -12,6 +12,11 @@ final class YoastFields
         self::DESCRIPTION => '_yoast_wpseo_metadesc',
     ];
 
+    public const TERM_META_KEYS = [
+        self::TITLE => 'wpseo_title',
+        self::DESCRIPTION => 'wpseo_desc',
+    ];
+
     private function __construct()
     {
     }

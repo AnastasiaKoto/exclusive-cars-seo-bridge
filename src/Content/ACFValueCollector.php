@@ -16,6 +16,7 @@ final class ACFValueCollector
             return [];
         }
 
+        
         $result = [];
         foreach ($fields as $field) {
             $key = $field['key'] ?? null;
@@ -26,7 +27,7 @@ final class ACFValueCollector
             $result[$key] = [
                 'name' => $field['name'] ?? null,
                 'value' => $field['value'] ?? null,
-                'exists' => true,
+                'exists' => metadata_exists('post', $postId, $field['name']),
             ];
         }
 
