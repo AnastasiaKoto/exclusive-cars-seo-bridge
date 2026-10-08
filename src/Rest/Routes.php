@@ -107,6 +107,7 @@ final class Routes
                     'expected_version' => [
                         'required' => true,
                         'type' => 'string',
+                        'pattern' => '^sha256:[a-f0-9]{64}$',
                     ],
                     'fields' => [
                         'required' => true,

@@ -1,48 +1,42 @@
 <?php
-
 declare(strict_types=1);
+
 namespace ExclusiveCars\SeoBridge\Content;
 
-use WP_Query;
-use WP_Post;
-use ExclusiveCars\SeoBridge\Inventory\PostTypeCollector;
-use ExclusiveCars\SeoBridge\Contract\PostFields;
 use ExclusiveCars\SeoBridge\Contract\PostStates;
+use ExclusiveCars\SeoBridge\Inventory\PostTypeCollector;
+use WP_Query;
+
 final class PostsCollector
 {
     public function __construct(
         private PostTypeCollector $postTypes,
-        private ACFValueCollector $acfValueCollector,
-        private YoastValueCollector $yoastValueCollector,
-        private PostVersionCalculator $postVersionCalculator,
         private PostStatesCollector $postStatesCollector
-    )
-    {}
+    ) {
+    }
 
-    public function collect(int $page, int $per_page): array
+    public function collect(int $page, int $perPage): array
     {
-        $items = [];
         $query = new WP_Query([
             'post_type' => $this->postTypes->names(),
             'post_status' => PostStates::ALLOWED,
-            'posts_per_page' => $per_page,
+            'posts_per_page' => $perPage,
             'paged' => $page,
             'orderby' => 'ID',
-            'order' => 'ASC'
+            'order' => 'ASC',
         ]);
-
-        foreach($query->posts as $post) {
+        $items = [];
+        foreach ($query->posts as $post) {
             $items[] = $this->postStatesCollector->collect($post);
         }
-
         return [
             'items' => $items,
             'pagination' => [
                 'page' => $page,
-                'per_page' => $per_page,
+                'per_page' => $perPage,
                 'total_pages' => (int) $query->max_num_pages,
-                'total_items' => (int) $query->found_posts
-            ]
+                'total_items' => (int) $query->found_posts,
+            ],
         ];
     }
 }

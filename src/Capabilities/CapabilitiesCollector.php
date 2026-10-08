@@ -70,7 +70,7 @@ final class CapabilitiesCollector
 
     private function collectYoast(): array
     {
-        $available = defined('WPSEO_VERSION');
+        $available = defined('WPSEO_VERSION') && function_exists('YoastSEO');
 
         return [
             'available' => $available,

@@ -1,62 +1,35 @@
 <?php
-
 declare(strict_types=1);
 
 namespace ExclusiveCars\SeoBridge\Content;
+
 use ExclusiveCars\SeoBridge\Contract\YoastFields;
+
 final class YoastValueCollector
 {
-    public function collect(int $post_id): array
+    public function collect(int $postId): array
     {
-        if (! defined('WPSEO_VERSION')) {
+        if (!defined('WPSEO_VERSION') || !function_exists('YoastSEO')) {
             return [];
         }
-        $renderedValues = $this->getRenderedValues($post_id);
-        return [
-            'title' => [
-                'raw' => $this->getValue($post_id, YoastFields::META_KEYS[YoastFields::TITLE]),
-                'rendered' => $renderedValues['title']
-            ],
-            'description' => [
-                'raw' => $this->getValue($post_id, YoastFields::META_KEYS[YoastFields::DESCRIPTION]),
-                'rendered' => $renderedValues['description']
-            ]
-        ];
-    }
 
-    private function getValue(int $post_id, string $metaKey): ?string
-    {
-        if(!function_exists('get_post_meta')) {
-            return null;
-        }
-        if(!metadata_exists('post', $post_id, $metaKey)) {
-            return null;
-        }
-
-        $value = get_post_meta($post_id, $metaKey, true);
-
-        if(!is_string($value)) {
-            return null;
-        }
-
-        return $value;
-    }
-
-    private function getRenderedValues(int $post_id): ?array
-    {
-        $presentation = YoastSEO()->meta->for_post($post_id);
-
-        $renderedTitle = null;
-        $renderedDescription = null;
-
+        $rendered = ['title' => null, 'description' => null];
+        $presentation = YoastSEO()->meta->for_post($postId);
         if ($presentation !== false) {
-            $renderedTitle = $presentation->title;
-            $renderedDescription = $presentation->description;
+            $rendered['title'] = $presentation->title;
+            $rendered['description'] = $presentation->description;
         }
-        
-        return [
-            'title' => $renderedTitle,
-            'description' => $renderedDescription 
-        ];
+
+        $result = [];
+        foreach (YoastFields::META_KEYS as $field => $metaKey) {
+            $exists = metadata_exists('post', $postId, $metaKey);
+            $raw = $exists ? get_post_meta($postId, $metaKey, true) : null;
+            $result[$field] = [
+                'raw' => is_string($raw) ? $raw : null,
+                'rendered' => $rendered[$field],
+                'exists' => $exists,
+            ];
+        }
+        return $result;
     }
 }
