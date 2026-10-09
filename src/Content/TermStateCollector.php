@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace ExclusiveCars\SeoBridge\Content;
 
+use ExclusiveCars\SeoBridge\Contract\FieldGroups;
 use WP_Term;
 use ExclusiveCars\SeoBridge\Contract\TermFields;
 use RuntimeException;
@@ -24,15 +25,15 @@ final class TermStateCollector
 
         $state = [
             TermFields::ID => (int) $term->term_id,
-            'core' => [
+            FieldGroups::CORE => [
                 TermFields::TAXONOMY => (string) $term->taxonomy,
                 TermFields::TERM_NAME => (string) $term->name,
                 TermFields::TERM_SLUG => (string) $term->slug,
                 TermFields::TERM_DESCRIPTION => (string) $term->description,
                 TermFields::PARENT_ID => (int) $term->parent,
             ],
-            'acf' => [],
-            'yoast' => $this->yoastTermsValueCollector->collect($term),
+            FieldGroups::ACF => [],
+            FieldGroups::YOAST => $this->yoastTermsValueCollector->collect($term),
             TermFields::URL => $permalink !== false ? $permalink : null,
         ];
         $state[TermFields::VERSION] = $this->postVersionCalculator->calculate($state);

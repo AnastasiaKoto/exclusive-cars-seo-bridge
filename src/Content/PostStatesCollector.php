@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace ExclusiveCars\SeoBridge\Content;
 
+use ExclusiveCars\SeoBridge\Contract\FieldGroups;
 use ExclusiveCars\SeoBridge\Contract\PostFields;
 use WP_Post;
 
@@ -20,7 +21,7 @@ final class PostStatesCollector
         $permalink = get_permalink($post);
         $state = [
             PostFields::ID => (int) $post->ID,
-            'core' => [
+            FieldGroups::CORE => [
                 PostFields::POST_TYPE => (string) $post->post_type,
                 PostFields::STATUS => (string) $post->post_status,
                 PostFields::SLUG => (string) $post->post_name,
@@ -29,8 +30,8 @@ final class PostStatesCollector
                 PostFields::EXCERPT => (string) $post->post_excerpt,
                 PostFields::PARENT_ID => (int) $post->post_parent,
             ],
-            'acf' => $this->acfValueCollector->collect((int) $post->ID),
-            'yoast' => $this->yoastValueCollector->collect((int) $post->ID),
+            FieldGroups::ACF => $this->acfValueCollector->collect((int) $post->ID),
+            FieldGroups::YOAST => $this->yoastValueCollector->collect((int) $post->ID),
             PostFields::MODIFIED_AT => get_post_modified_time(DATE_ATOM, false, $post),
             PostFields::URL => $permalink !== false ? $permalink : null,
         ];

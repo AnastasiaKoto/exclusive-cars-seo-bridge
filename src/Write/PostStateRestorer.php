@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace ExclusiveCars\SeoBridge\Write;
 
+use ExclusiveCars\SeoBridge\Contract\FieldGroups;
 use RuntimeException;
 
 final class PostStateRestorer
@@ -18,15 +19,15 @@ final class PostStateRestorer
     {
         foreach (array_reverse(array_keys($changed)) as $group) {
             $fields = $changed[$group];
-            if ($group === 'core') {
+            if ($group === FieldGroups::CORE) {
                 $values = [];
                 foreach ($fields as $key => $_) {
-                    $values[$key] = $before['core'][$key];
+                    $values[$key] = $before[FieldGroups::CORE][$key];
                 }
                 $this->coreWriter->write($postId, $values);
-            } elseif ($group === 'acf') {
+            } elseif ($group === FieldGroups::ACF) {
                 foreach ($fields as $key => $_) {
-                    $original = $before['acf'][$key] ?? null;
+                    $original = $before[FieldGroups::ACF][$key] ?? null;
                     if ($original === null || !$original['exists']) {
                         if (!function_exists('delete_field') || !delete_field($key, $postId)) {
                             throw new RuntimeException('ACF compensation failed.');
@@ -35,9 +36,9 @@ final class PostStateRestorer
                         $this->acfWriter->write($postId, [$key => $original['value']]);
                     }
                 }
-            } elseif ($group === 'yoast') {
+            } elseif ($group === FieldGroups::YOAST) {
                 foreach ($fields as $key => $_) {
-                    $original = $before['yoast'][$key];
+                    $original = $before[FieldGroups::YOAST][$key];
                     $this->yoastWriter->restore($postId, $key, $original);
                 }
             }

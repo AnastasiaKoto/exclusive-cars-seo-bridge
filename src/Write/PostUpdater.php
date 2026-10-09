@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace ExclusiveCars\SeoBridge\Write;
 
+use ExclusiveCars\SeoBridge\Contract\FieldGroups;
 use DomainException;
 use ExclusiveCars\SeoBridge\Content\PostStatesCollector;
 use ExclusiveCars\SeoBridge\Contract\PostFields;
@@ -16,8 +17,6 @@ use WP_Post;
 
 final class PostUpdater
 {
-    private const FIELD_GROUPS = ['core', 'acf', 'yoast'];
-
     public function __construct(
         private PostTypeCollector $postTypeCollector,
         private PostStatesCollector $postStatesCollector,
@@ -34,13 +33,13 @@ final class PostUpdater
         if (!hash_equals($before[PostFields::VERSION], $expectedVersion)) {
             throw new VersionMismatchException('Post version mismatch.');
         }
-        if ($fields === [] || array_diff(array_keys($fields), self::FIELD_GROUPS)) {
+        if ($fields === [] || array_diff(array_keys($fields), FieldGroups::POST_WRITABLE)) {
             throw new InvalidArgumentException('Fields must contain supported, non-empty groups.');
         }
 
-        $core = $this->group($fields, 'core');
-        $acf = $this->group($fields, 'acf');
-        $yoast = $this->group($fields, 'yoast');
+        $core = $this->group($fields, FieldGroups::CORE);
+        $acf = $this->group($fields, FieldGroups::ACF);
+        $yoast = $this->group($fields, FieldGroups::YOAST);
         $this->coreFieldWriter->validate($core);
         $this->acfFieldWriter->validate($acf);
         $this->yoastFieldWriter->validate($yoast);
@@ -49,18 +48,18 @@ final class PostUpdater
             throw new InvalidArgumentException('At least one field must be provided.');
         }
         foreach ($acf as $key => $_) {
-            if (!isset($before['acf'][$key])) {
+            if (!isset($before[FieldGroups::ACF][$key])) {
                 throw new DomainException('ACF field is not available on this post: ' . $key);
             }
         }
 
-        $requested = ['core' => $core, 'acf' => $acf, 'yoast' => $yoast];
+        $requested = [FieldGroups::CORE => $core, FieldGroups::ACF => $acf, FieldGroups::YOAST => $yoast];
         $changed = [];
         foreach ($requested as $group => $values) {
             foreach ($values as $key => $value) {
-                $current = $group === 'yoast'
-                    ? ($before['yoast'][$key]['raw'] ?? null)
-                    : ($group === 'acf' ? ($before['acf'][$key]['value'] ?? null) : $before['core'][$key]);
+                $current = $group === FieldGroups::YOAST
+                    ? ($before[FieldGroups::YOAST][$key]['raw'] ?? null)
+                    : ($group === FieldGroups::ACF ? ($before[FieldGroups::ACF][$key]['value'] ?? null) : $before[FieldGroups::CORE][$key]);
                 if ($current !== $value) {
                     $changed[$group][$key] = $value;
                 }
@@ -79,14 +78,14 @@ final class PostUpdater
         }
 
         try {
-            if (isset($changed['core'])) {
-                $this->coreFieldWriter->write($postId, $changed['core']);
+            if (isset($changed[FieldGroups::CORE])) {
+                $this->coreFieldWriter->write($postId, $changed[FieldGroups::CORE]);
             }
-            if (isset($changed['acf'])) {
-                $this->acfFieldWriter->write($postId, $changed['acf']);
+            if (isset($changed[FieldGroups::ACF])) {
+                $this->acfFieldWriter->write($postId, $changed[FieldGroups::ACF]);
             }
-            if (isset($changed['yoast'])) {
-                $this->yoastFieldWriter->write($postId, $changed['yoast']);
+            if (isset($changed[FieldGroups::YOAST])) {
+                $this->yoastFieldWriter->write($postId, $changed[FieldGroups::YOAST]);
             }
             $after = $this->getPostState($postId);
             
@@ -128,9 +127,9 @@ final class PostUpdater
     {
         foreach ($values as $group => $fields) {
             foreach ($fields as $key => $value) {
-                $actual = $group === 'yoast'
-                    ? ($state['yoast'][$key]['raw'] ?? null)
-                    : ($group === 'acf' ? ($state['acf'][$key]['value'] ?? null) : ($state['core'][$key] ?? null));
+                $actual = $group === FieldGroups::YOAST
+                    ? ($state[FieldGroups::YOAST][$key]['raw'] ?? null)
+                    : ($group === FieldGroups::ACF ? ($state[FieldGroups::ACF][$key]['value'] ?? null) : ($state[FieldGroups::CORE][$key] ?? null));
                 if ($actual !== $value) {
                     return false;
                 }
@@ -144,9 +143,9 @@ final class PostUpdater
         $values = [];
         foreach ($changed as $group => $fields) {
             foreach ($fields as $key => $_) {
-                $values[$group][$key] = $group === 'yoast'
-                    ? ($before['yoast'][$key]['raw'] ?? null)
-                    : ($group === 'acf' ? ($before['acf'][$key]['value'] ?? null) : $before['core'][$key]);
+                $values[$group][$key] = $group === FieldGroups::YOAST
+                    ? ($before[FieldGroups::YOAST][$key]['raw'] ?? null)
+                    : ($group === FieldGroups::ACF ? ($before[FieldGroups::ACF][$key]['value'] ?? null) : $before[FieldGroups::CORE][$key]);
             }
         }
         return $values;

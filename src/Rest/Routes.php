@@ -14,7 +14,8 @@ final class Routes
         private CapabilitiesController $capabilitiesController,
         private PostsController $postsController,
         private PostUpdateController $postUpdateController,
-        private TermsController $termsController
+        private TermsController $termsController,
+        private TermUpdateController $termUpdateController
     ) {}
 
     public function register(): void
@@ -148,6 +149,41 @@ final class Routes
                         'type' => 'integer',
                         'minimum' => 1,
                         'maximum' => 100,
+                    ],
+                ],
+            ]
+        );
+        register_rest_route(
+            Api::NAMESPACE,
+            '/terms/(?P<term_taxonomy>[a-z0-9_-]+)/(?P<term_id>\d+)',
+            [
+                'methods' => WP_REST_Server::EDITABLE,
+                'callback' => [
+                    $this->termUpdateController,
+                    'update',
+                ],
+                'permission_callback' => static function (): bool {
+                    return current_user_can(Capabilities::WRITE);
+                },
+                'args' => [
+                    'term_taxonomy' => [
+                        'required' => true,
+                        'type' => 'string',
+                        'pattern' => '^[a-z0-9_-]+$',
+                    ],
+                    'term_id' => [
+                        'required' => true,
+                        'type' => 'integer',
+                        'minimum' => 1,
+                    ],
+                    'expected_version' => [
+                        'required' => true,
+                        'type' => 'string',
+                        'pattern' => '^sha256:[a-f0-9]{64}$',
+                    ],
+                    'fields' => [
+                        'required' => true,
+                        'type' => 'object',
                     ],
                 ],
             ]

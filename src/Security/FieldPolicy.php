@@ -6,6 +6,7 @@ namespace ExclusiveCars\SeoBridge\Security;
 
 use ExclusiveCars\SeoBridge\Contract\PostFields;
 use ExclusiveCars\SeoBridge\Contract\YoastFields;
+use ExclusiveCars\SeoBridge\Contract\TermFields;
 final class FieldPolicy
 {
     private const READ_WRITE = [
@@ -66,6 +67,15 @@ final class FieldPolicy
         };
     }
 
+    public function coreTerm(string $field): array
+    {
+        return match ($field) {
+            TermFields::TERM_DESCRIPTION => self::READ_WRITE,
+
+            default => self::READ_ONLY,
+        };
+    }
+
     public function canWriteCore(string $field): bool
     {
         return in_array(
@@ -73,6 +83,17 @@ final class FieldPolicy
             [
                 PostFields::TITLE,
                 PostFields::CONTENT,
+            ],
+            true
+        );
+    }
+
+    public function canWriteCoreTerm(string $field): bool
+    {
+        return in_array(
+            $field,
+            [
+                TermFields::TERM_DESCRIPTION,
             ],
             true
         );

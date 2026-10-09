@@ -26,6 +26,7 @@ use ExclusiveCars\SeoBridge\Rest\InventoryController;
 use ExclusiveCars\SeoBridge\Rest\PostsController;
 use ExclusiveCars\SeoBridge\Rest\PostUpdateController;
 use ExclusiveCars\SeoBridge\Rest\TermsController;
+use ExclusiveCars\SeoBridge\Rest\TermUpdateController;
 use ExclusiveCars\SeoBridge\Rest\Routes;
 
 use ExclusiveCars\SeoBridge\Security\FieldPolicy;
@@ -35,6 +36,10 @@ use ExclusiveCars\SeoBridge\Write\CoreFieldWriter;
 use ExclusiveCars\SeoBridge\Write\PostStateRestorer;
 use ExclusiveCars\SeoBridge\Write\PostUpdater;
 use ExclusiveCars\SeoBridge\Write\YoastFieldWriter;
+use ExclusiveCars\SeoBridge\Write\CoreTermFieldWriter;
+use ExclusiveCars\SeoBridge\Write\TermStateRestorer;
+use ExclusiveCars\SeoBridge\Write\TermUpdater;
+use ExclusiveCars\SeoBridge\Write\YoastTermFieldWriter;
 
 final class Plugin
 {
@@ -45,7 +50,8 @@ final class Plugin
             new CapabilitiesController(new CapabilitiesCollector()),
             self::buildPostsController(),
             self::buildPostUpdateController(),
-            self::buildTermsController()
+            self::buildTermsController(),
+            self::buildTermUpdateController()
         );
         add_action('rest_api_init', [$routes, 'register']);
     }
@@ -106,5 +112,21 @@ final class Plugin
         $controller = new TermsController($collector);
 
         return $controller;
+    }
+
+    private static function buildTermUpdateController(): TermUpdateController
+    {
+        $policy = new FieldPolicy();
+        $core = new CoreTermFieldWriter($policy);
+        $yoast = new YoastTermFieldWriter($policy);
+        $state = new TermStateCollector(new PostVersionCalculator(), new YoastTermsValueCollector());
+
+        return new TermUpdateController(new TermUpdater(
+            new TaxonomyCollector(),
+            $core,
+            $yoast,
+            new TermStateRestorer($core, $yoast),
+            $state
+        ));
     }
 }
