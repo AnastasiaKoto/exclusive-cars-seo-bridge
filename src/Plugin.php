@@ -28,6 +28,7 @@ use ExclusiveCars\SeoBridge\Rest\PostUpdateController;
 use ExclusiveCars\SeoBridge\Rest\TermsController;
 use ExclusiveCars\SeoBridge\Rest\TermUpdateController;
 use ExclusiveCars\SeoBridge\Rest\Routes;
+use ExclusiveCars\SeoBridge\Rest\PostCreatorController;
 
 use ExclusiveCars\SeoBridge\Security\FieldPolicy;
 
@@ -40,6 +41,7 @@ use ExclusiveCars\SeoBridge\Write\CoreTermFieldWriter;
 use ExclusiveCars\SeoBridge\Write\TermStateRestorer;
 use ExclusiveCars\SeoBridge\Write\TermUpdater;
 use ExclusiveCars\SeoBridge\Write\YoastTermFieldWriter;
+use ExclusiveCars\SeoBridge\Write\PostCreator;
 
 final class Plugin
 {
@@ -51,7 +53,8 @@ final class Plugin
             self::buildPostsController(),
             self::buildPostUpdateController(),
             self::buildTermsController(),
-            self::buildTermUpdateController()
+            self::buildTermUpdateController(),
+            self::buildPostCreateController()
         );
         add_action('rest_api_init', [$routes, 'register']);
     }
@@ -99,6 +102,21 @@ final class Plugin
             $yoast,
             new PostStateRestorer($core, $acf, $yoast)
         ));
+    }
+
+    private static function buildPostCreateController(): PostCreatorController
+    {
+        $post_types = new PostTypeCollector();
+        $policy = new FieldPolicy();
+        $core = new CoreFieldWriter($policy);
+        $acf = new AcfFieldWriter($policy);
+        $yoast = new YoastFieldWriter($policy);
+
+        $states = self::states();
+        $creator = new PostCreator($post_types, $core, $acf, $yoast, $states);
+        $controller = new PostCreatorController($creator);
+
+        return $controller;
     }
 
     private static function buildTermsController(): TermsController

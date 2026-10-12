@@ -15,7 +15,8 @@ final class Routes
         private PostsController $postsController,
         private PostUpdateController $postUpdateController,
         private TermsController $termsController,
-        private TermUpdateController $termUpdateController
+        private TermUpdateController $termUpdateController,
+        private PostCreatorController $postCreatorController
     ) {}
 
     public function register(): void
@@ -110,6 +111,33 @@ final class Routes
                         'required' => true,
                         'type' => 'string',
                         'pattern' => '^sha256:[a-f0-9]{64}$',
+                    ],
+                    'fields' => [
+                        'required' => true,
+                        'type' => 'object',
+                    ],
+                ],
+            ]
+        );
+        register_rest_route(
+            Api::NAMESPACE,
+            '/posts',
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+
+                'callback' => [
+                    $this->postCreatorController,
+                    'create',
+                ],
+
+                'permission_callback' => static function (): bool {
+                    return current_user_can(Capabilities::WRITE);
+                },
+
+                'args' => [
+                    'post_type' => [
+                        'required' => true,
+                        'type' => 'string'
                     ],
                     'fields' => [
                         'required' => true,
