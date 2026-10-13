@@ -34,19 +34,21 @@ final class AcfFieldCollector
             $result[] = [
                 'key' => $group['key'] ?? null,
                 'title' => $group['title'] ?? null,
-                'fields' => $this->normalizeFields($fields),
+                'active' => (bool) ($group['active'] ?? false),
+                'location' => $group['location'] ?? [],
+                'fields' => $this->normalizeFields($fields, $group),
             ];
         }
 
         return $result;
     }
 
-    private function normalizeFields(array $fields): array
+    private function normalizeFields(array $fields, array $group): array
     {
         $result = [];
 
         foreach ($fields as $field) {
-            $access = $this->fieldPolicy->acf($field['key'] ?? '');
+            $access = $this->fieldPolicy->acfForGroup($group, $field['key'] ?? '');
             $result[] = [
                 'key' => $field['key'] ?? null,
                 'name' => $field['name'] ?? null,

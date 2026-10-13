@@ -18,11 +18,19 @@ final class CoreTermFieldWriter
     {
         $this->validate($fields);
 
+        $termData = [];
+        if (array_key_exists(TermFields::TERM_NAME, $fields)) {
+            $termData['name'] = $fields[TermFields::TERM_NAME];
+        }
         if (array_key_exists(TermFields::TERM_DESCRIPTION, $fields)) {
+            $termData['description'] = $fields[TermFields::TERM_DESCRIPTION];
+        }
+
+        if ($termData !== []) {
             $result = wp_update_term(
                 (int) $term->term_id,
                 $term->taxonomy,
-                wp_slash(['description' => $fields[TermFields::TERM_DESCRIPTION]])
+                wp_slash($termData)
             );
 
             if (is_wp_error($result)) {

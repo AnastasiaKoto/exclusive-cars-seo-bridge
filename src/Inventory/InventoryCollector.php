@@ -13,12 +13,15 @@ final class InventoryCollector {
 
     public function collect(): array
     {
+        $postTypes = $this->postTypes->collect();
+        $taxonomies = $this->taxonomies->collect();
+
         return [
-            'post_types' => $this->postTypes->collect(),
-            'taxonomies' => $this->taxonomies->collect(),
-            'core_fields' => $this->coreFields->collect(),
+            'post_types' => $postTypes,
+            'taxonomies' => $taxonomies,
+            'core_fields' => $this->coreFields->collect($postTypes, $taxonomies),
             'acf_fields' => $this->acfFields->collect(),
-            'yoast_fields' => $this->yoastFields->collect(),
+            'yoast_fields' => $this->yoastFields->collect($postTypes, $taxonomies),
         ];
     }
 }

@@ -27,6 +27,7 @@ final class TaxonomyCollector
             ]);
 
             $result[] = [
+                'object_kind' => 'term',
                 'name' => $taxonomy->name,
                 'label' => $taxonomy->labels->name,
                 'rest_base' => $taxonomy->rest_base

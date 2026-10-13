@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ExclusiveCars\SeoBridge\Security;
 
+use ExclusiveCars\SeoBridge\Contract\FieldGroups;
 use ExclusiveCars\SeoBridge\Contract\PostFields;
 use ExclusiveCars\SeoBridge\Contract\YoastFields;
 use ExclusiveCars\SeoBridge\Contract\TermFields;
@@ -57,6 +58,57 @@ final class FieldPolicy
         );
     }
 
+    public function post(string $postType, string $group, string $field, ?int $postId = null): array
+    {
+        return match ($group) {
+            FieldGroups::CORE => $this->core($field),
+            FieldGroups::ACF => $this->acfForPost($postType, $field, $postId),
+            FieldGroups::YOAST => $this->yoast($field),
+            default => self::DENIED,
+        };
+    }
+
+    public function term(string $taxonomy, string $group, string $field): array
+    {
+        return match ($group) {
+            FieldGroups::CORE => $this->coreTerm($field),
+            FieldGroups::YOAST => $this->yoast($field),
+            default => self::DENIED,
+        };
+    }
+
+    public function acfForPost(string $postType, string $fieldKey, ?int $postId = null): array
+    {
+        if (!$this->canWriteAcf($fieldKey)
+            || !function_exists('acf_get_field')
+            || !function_exists('acf_get_field_group')
+            || !function_exists('acf_get_field_group_visibility')) {
+            return self::READ_ONLY;
+        }
+
+        $field = acf_get_field($fieldKey);
+        $group = is_array($field) ? acf_get_field_group($field['parent'] ?? 0) : false;
+        if (!is_array($group)) {
+            return self::READ_ONLY;
+        }
+
+        $screen = ['post_type' => $postType];
+        if ($postId !== null) {
+            $screen['post_id'] = $postId;
+        }
+
+        return acf_get_field_group_visibility($group, $screen)
+            ? self::READ_WRITE
+            : self::READ_ONLY;
+    }
+
+    public function acfForGroup(array $group, string $fieldKey): array
+    {
+        return $this->canWriteAcf($fieldKey) && !empty($group['active']) && !empty($group['location'])
+            ? self::READ_WRITE
+            : self::READ_ONLY;
+    }
+
     public function core(string $field): array
     {
         return match ($field) {
@@ -70,6 +122,7 @@ final class FieldPolicy
     public function coreTerm(string $field): array
     {
         return match ($field) {
+            TermFields::TERM_NAME,
             TermFields::TERM_DESCRIPTION => self::READ_WRITE,
 
             default => self::READ_ONLY,
@@ -93,6 +146,7 @@ final class FieldPolicy
         return in_array(
             $field,
             [
+                TermFields::TERM_NAME,
                 TermFields::TERM_DESCRIPTION,
             ],
             true

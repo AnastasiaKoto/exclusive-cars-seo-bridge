@@ -13,6 +13,7 @@ use ExclusiveCars\SeoBridge\Contract\FieldGroups;
 use ExclusiveCars\SeoBridge\Contract\PostFields;
 use ExclusiveCars\SeoBridge\Content\PostStatesCollector;
 use ExclusiveCars\SeoBridge\Inventory\PostTypeCollector;
+use ExclusiveCars\SeoBridge\Security\FieldPolicy;
 use WP_Post;
 final class PostCreator
 {
@@ -21,7 +22,8 @@ final class PostCreator
         private CoreFieldWriter $coreFieldWriter,
         private AcfFieldWriter $acfFieldWriter,
         private YoastFieldWriter $yoastFieldWriter,
-        private PostStatesCollector $postStatesCollector
+        private PostStatesCollector $postStatesCollector,
+        private FieldPolicy $fieldPolicy
     )
     {}
 
@@ -43,6 +45,14 @@ final class PostCreator
         $this->coreFieldWriter->validate($core);
         $this->acfFieldWriter->validate($acf);
         $this->yoastFieldWriter->validate($yoast);
+        $postType = $post_type;
+        foreach ([FieldGroups::CORE => $core, FieldGroups::ACF => $acf, FieldGroups::YOAST => $yoast] as $group => $values) {
+            foreach ($values as $field => $_) {
+                if (!$this->fieldPolicy->post($postType, $group, (string) $field)['writable']) {
+                    throw new DomainException('Field is not writable for this post type: ' . $postType . '/' . $group . '/' . $field);
+                }
+            }
+        }
 
         if ($core === [] && $acf === [] && $yoast === []) {
             throw new InvalidArgumentException('Fields must be provided.');

@@ -53,7 +53,8 @@ $updater = new ExclusiveCars\SeoBridge\Write\TermUpdater(
     $core,
     $yoast,
     new ExclusiveCars\SeoBridge\Write\TermStateRestorer($core, $yoast),
-    $states
+    $states,
+    $policy
 );
 $controller = new ExclusiveCars\SeoBridge\Rest\TermUpdateController($updater);
 $version = $states->collect(new WP_Term())['version'];

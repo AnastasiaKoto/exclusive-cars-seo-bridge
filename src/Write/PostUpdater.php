@@ -10,6 +10,7 @@ use ExclusiveCars\SeoBridge\Contract\PostFields;
 use ExclusiveCars\SeoBridge\Contract\PostStates;
 use ExclusiveCars\SeoBridge\Exception\VersionMismatchException;
 use ExclusiveCars\SeoBridge\Inventory\PostTypeCollector;
+use ExclusiveCars\SeoBridge\Security\FieldPolicy;
 use InvalidArgumentException;
 use RuntimeException;
 use Throwable;
@@ -23,7 +24,8 @@ final class PostUpdater
         private CoreFieldWriter $coreFieldWriter,
         private AcfFieldWriter $acfFieldWriter,
         private YoastFieldWriter $yoastFieldWriter,
-        private PostStateRestorer $restorer
+        private PostStateRestorer $restorer,
+        private FieldPolicy $fieldPolicy
     ) {
     }
 
@@ -43,6 +45,14 @@ final class PostUpdater
         $this->coreFieldWriter->validate($core);
         $this->acfFieldWriter->validate($acf);
         $this->yoastFieldWriter->validate($yoast);
+        $postType = $before[FieldGroups::CORE][PostFields::POST_TYPE];
+        foreach ([FieldGroups::CORE => $core, FieldGroups::ACF => $acf, FieldGroups::YOAST => $yoast] as $group => $values) {
+            foreach ($values as $field => $_) {
+                if (!$this->fieldPolicy->post($postType, $group, (string) $field, $postId)['writable']) {
+                    throw new DomainException('Field is not writable for this post type: ' . $postType . '/' . $group . '/' . $field);
+                }
+            }
+        }
 
         if ($core === [] && $acf === [] && $yoast === []) {
             throw new InvalidArgumentException('At least one field must be provided.');

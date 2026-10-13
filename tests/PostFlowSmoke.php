@@ -20,6 +20,9 @@ function wp_json_encode($value, int $flags): string|false { return json_encode($
 function get_field_objects(int $id, bool $format): array { return ['Description' => ['key' => 'field_668f86ae37a5f', 'name' => 'Description', 'value' => $GLOBALS['acf']['field_668f86ae37a5f']]]; }
 function update_field(string $key, string $value, int $id): bool { $GLOBALS['acf'][$key] = $value; return true; }
 function get_field(string $key, int $id, bool $format): ?string { return $GLOBALS['acf'][$key] ?? null; }
+function acf_get_field(string $key): array|false { return $key === 'field_668f86ae37a5f' ? ['parent' => 918] : false; }
+function acf_get_field_group(int $parent): array|false { return $parent === 918 ? ['active' => true, 'location' => [[['param' => 'post_type', 'operator' => '==', 'value' => 'cars']]]] : false; }
+function acf_get_field_group_visibility(array $group, array $screen): bool { return $screen['post_type'] === 'cars'; }
 function metadata_exists(string $type, int $id, string $key): bool { return array_key_exists($key, $GLOBALS['meta']); }
 function get_post_meta(int $id, string $key, bool $single): ?string { return $GLOBALS['meta'][$key] ?? null; }
 function update_post_meta(int $id, string $key, string $value): bool { if ($GLOBALS['fail_meta']) { $GLOBALS['fail_meta'] = false; return false; } $GLOBALS['meta'][$key] = $value; return true; }
@@ -54,7 +57,7 @@ $policy = new FieldPolicy();
 $core = new CoreFieldWriter($policy);
 $acfWriter = new AcfFieldWriter($policy);
 $yoast = new YoastFieldWriter($policy);
-$updater = new PostUpdater(new PostTypeCollector(), $states, $core, $acfWriter, $yoast, new PostStateRestorer($core, $acfWriter, $yoast));
+$updater = new PostUpdater(new PostTypeCollector(), $states, $core, $acfWriter, $yoast, new PostStateRestorer($core, $acfWriter, $yoast), $policy);
 $before = $states->collect(get_post(7));
 assert(isset($before['core']['title'], $before['acf']['field_668f86ae37a5f']['value'], $before['yoast']['title']['raw']));
 $result = $updater->update(7, $before['version'], ['core' => ['title' => 'New'], 'acf' => ['field_668f86ae37a5f' => 'New ACF'], 'yoast' => ['title' => 'New SEO']]);

@@ -7,6 +7,7 @@ use ExclusiveCars\SeoBridge\Content\TermStateCollector;
 use ExclusiveCars\SeoBridge\Contract\FieldGroups;
 use ExclusiveCars\SeoBridge\Contract\TermFields;
 use ExclusiveCars\SeoBridge\Inventory\TaxonomyCollector;
+use ExclusiveCars\SeoBridge\Security\FieldPolicy;
 use WP_Error;
 use WP_Term;
 use RuntimeException;
@@ -22,7 +23,8 @@ final class TermUpdater
         private CoreTermFieldWriter $coreFieldWriter,
         private YoastTermFieldWriter $yoastTermFieldWriter,
         private TermStateRestorer $termStateRestorer,
-        private TermStateCollector $termStateCollector
+        private TermStateCollector $termStateCollector,
+        private FieldPolicy $fieldPolicy
     )
     {}
 
@@ -42,6 +44,13 @@ final class TermUpdater
         $yoast = $this->group($fields, FieldGroups::YOAST);
         $this->coreFieldWriter->validate($core);
         $this->yoastTermFieldWriter->validate($yoast);
+        foreach ([FieldGroups::CORE => $core, FieldGroups::YOAST => $yoast] as $group => $values) {
+            foreach ($values as $field => $_) {
+                if (!$this->fieldPolicy->term($termTaxonomy, $group, (string) $field)['writable']) {
+                    throw new DomainException('Field is not writable for this taxonomy: ' . $termTaxonomy . '/' . $group . '/' . $field);
+                }
+            }
+        }
 
         if ($core === [] && $yoast === []) {
             throw new InvalidArgumentException('At least one field must be provided.');

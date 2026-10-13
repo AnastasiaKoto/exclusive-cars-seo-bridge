@@ -24,6 +24,7 @@ final class PostTypeCollector
             $count = wp_count_posts($postType->name);
 
             $result[] = [
+                'object_kind' => 'post',
                 'name' => $postType->name,
                 'label' => $postType->labels->name,
                 'rest_base' => $postType->rest_base ?: $postType->name,

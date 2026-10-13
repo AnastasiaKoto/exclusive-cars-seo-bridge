@@ -100,7 +100,7 @@ final class Plugin
             $core,
             $acf,
             $yoast,
-            new PostStateRestorer($core, $acf, $yoast)
+            new PostStateRestorer($core, $acf, $yoast), $policy
         ));
     }
 
@@ -113,7 +113,7 @@ final class Plugin
         $yoast = new YoastFieldWriter($policy);
 
         $states = self::states();
-        $creator = new PostCreator($post_types, $core, $acf, $yoast, $states);
+        $creator = new PostCreator($post_types, $core, $acf, $yoast, $states, $policy);
         $controller = new PostCreatorController($creator);
 
         return $controller;
@@ -144,7 +144,8 @@ final class Plugin
             $core,
             $yoast,
             new TermStateRestorer($core, $yoast),
-            $state
+            $state,
+            $policy
         ));
     }
 }
